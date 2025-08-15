@@ -6,7 +6,7 @@ import pandas as pd
 import json
 from io import StringIO
 import time
-from utils import compute_consciousness, compute_creativity, generate_random_scenario, ai_suggestions
+from utils import generate_random_scenario, compute_consciousness, compute_creativity
 
 # ------------------------------
 # Page Setup
@@ -15,7 +15,7 @@ st.set_page_config(page_title="MindScape (The Complex Equation Simulator)",
                    page_icon="🧠", layout="wide")
 
 # ------------------------------
-# Futuristic Styling
+# Cyberpunk / Futuristic Styling
 # ------------------------------
 st.markdown("""
 <style>
@@ -25,6 +25,7 @@ body {
     font-family:'Orbitron', monospace;
     color: #00ffff;
     background: linear-gradient(135deg, #0a0a0a, #111122);
+    transition: background 1s ease;
 }
 
 @keyframes fadeIn {from {opacity:0; transform:translateY(-10px);} to {opacity:1; transform:translateY(0);} }
@@ -57,7 +58,7 @@ st.markdown("""
 <div class="welcome-box">
     <div style="font-size:2.8em; font-weight:bold;">🚀 MindScape</div>
     <div style="margin-top:10px; font-size:1.3em;">
-        A simulation creator by <b>Sam Andrews Rodriguez II</b>.<br>
+        A simulation creator, the first of its kind, by <b>Sam Andrews Rodriguez II</b>.<br>
         Explore consciousness, creativity, dimensionality, and AI-driven scenarios.
     </div>
     <hr style="border:0.5px solid #00ffff; margin:15px 0;">
@@ -80,7 +81,7 @@ if "history" not in st.session_state:
 demo_values = {"R":7.0,"alpha":1.2,"theta":1.0,"S":8.0,"Q":7.0,"A":9.0,"E":6.0,"M":8.0,"Dn":2.0,"beta":1.0}
 
 # ------------------------------
-# Animate Sliders
+# Helper Functions
 # ------------------------------
 def animate_sliders(target_values, steps=15, delay=0.03):
     for i in range(1, steps+1):
@@ -88,29 +89,38 @@ def animate_sliders(target_values, steps=15, delay=0.03):
             current = st.session_state.sliders[key]
             st.session_state.sliders[key] = current + (target_values[key]-current)*(i/steps)
         time.sleep(delay)
-        # Only rerun the app once after animation completes
-    st.experimental_rerun()
+        st.experimental_rerun()
+
+def ai_suggestions(current_values):
+    suggestions = []
+    balanced = {k:5.0 for k in current_values.keys()}
+    suggestions.append(("Balanced", balanced))
+    high_c = {k: round(np.random.uniform(7.5,10.0),1) for k in current_values.keys()}
+    suggestions.append(("High Consciousness", high_c))
+    creative = {k: round(np.random.uniform(0.5,10.0),1) for k in current_values.keys()}
+    suggestions.append(("Creative AI Insight", creative))
+    return suggestions
 
 # ------------------------------
 # Scenario Buttons
 # ------------------------------
-if st.sidebar.button("📈 Load Demo Scenario"):
+if st.sidebar.button("📈 Load Demo Scenario", key="demo_scn"):
     animate_sliders(demo_values)
-if st.sidebar.button("🎲 Generate Random Scenario"):
+if st.sidebar.button("🎲 Generate Random Scenario", key="rand_scn"):
     animate_sliders(generate_random_scenario(st.session_state.sliders))
 
-target_variable = st.sidebar.selectbox("Select variable to solve for:", variables, index=variables.index("C"))
+target_variable = st.sidebar.selectbox("Select variable to solve for:", variables, index=variables.index("C"), key="target_var")
 
-# Display sliders with unique keys
+# Display sliders
 slider_values = {}
 for var in default_values.keys():
-    slider_values[var] = st.sidebar.slider(f"{var} slider",0.1,10.0,st.session_state.sliders[var],0.1, key=f"slider_{var}")
+    slider_values[var] = st.sidebar.slider(f"{var}", 0.1, 10.0, st.session_state.sliders[var], 0.1, key=f"{var}_slider")
 
 # AIBuddy Suggestions
 ai_tab = st.sidebar.expander("🤖 AIBuddy Suggestions")
 ai_choices = ai_suggestions(slider_values)
 for name, vals in ai_choices:
-    if ai_tab.button(f"{name} AI"):
+    if ai_tab.button(f"💡 {name}", key=f"ai_{name}"):
         animate_sliders(vals)
 
 # Compute main target variable
@@ -127,6 +137,12 @@ tabs = st.tabs(["Simulation","Beginner Equation","Possibilities","History","Abou
 with tabs[0]:
     st.markdown("<div class='tab-header'>📊 Consciousness Simulation</div>", unsafe_allow_html=True)
     
+    influences = {k:slider_values[k] for k in ["R","A","S","Q","E","M"]}
+    most_influential = max(influences.items(), key=lambda x:x[1])[0]
+    st.info(f"Currently, **{most_influential}** has the largest impact on {target_variable}")
+    
+    st.markdown(f"<div class='metric-display'>{target_variable} = {C_complex:.4f}</div>", unsafe_allow_html=True)
+    
     # 2D Plot
     x = np.linspace(0.1,10,50)
     y = (slider_values["R"]*(slider_values["alpha"]**slider_values["theta"])*x*slider_values["Q"]*(1.3*slider_values["A"])*slider_values["E"]*(1.6*slider_values["M"]))/(slider_values["Dn"]*(slider_values["beta"]**slider_values["theta"]))
@@ -135,13 +151,13 @@ with tabs[0]:
     fig.update_layout(title=f"{target_variable} vs Stimulus (S)", xaxis_title="Stimulus (S)", yaxis_title=f"{target_variable}", template="plotly_dark")
     st.plotly_chart(fig,use_container_width=True)
 
-    # 3D Surface Options
+    # 3D Surface with selectable axes
     st.subheader("🌐 3D Variable Interaction Map")
-    col1, col2, col3 = st.columns(3)
     all_vars = list(slider_values.keys())
-    with col1: x_var = st.selectbox("X-axis variable:", all_vars, index=all_vars.index("S"))
-    with col2: y_var = st.selectbox("Y-axis variable:", all_vars, index=all_vars.index("A"))
-    with col3: z_var = st.selectbox("Color by variable:", all_vars, index=all_vars.index("C"))
+    col1, col2, col3 = st.columns(3)
+    with col1: x_var = st.selectbox("X-axis variable:", all_vars, index=all_vars.index("S"), key="x_var")
+    with col2: y_var = st.selectbox("Y-axis variable:", all_vars, index=all_vars.index("A"), key="y_var")
+    with col3: z_var = st.selectbox("Color by variable:", all_vars, index=all_vars.index("C"), key="z_var")
 
     X = np.linspace(0.1,10,30)
     Y = np.linspace(0.1,10,30)
@@ -155,7 +171,7 @@ with tabs[0]:
 
     fig3d = go.Figure(data=[go.Surface(z=Z,x=X,y=Y,colorscale='Viridis')])
     fig3d.update_layout(scene=dict(xaxis_title=x_var, yaxis_title=y_var, zaxis_title=z_var),
-                        template="plotly_dark",height=600)
+                        template="plotly_dark", height=600)
     st.plotly_chart(fig3d,use_container_width=True)
 
 # -------- Beginner Equation Tab --------
@@ -169,18 +185,18 @@ with tabs[1]:
     C_grid = np.zeros((len(R_range), len(D_range)))
     for i, r in enumerate(R_range):
         for j, d in enumerate(D_range):
-            C_grid[i, j] = compute_creativity(r, d)
+            C_grid[i,j] = compute_creativity(r,d)
 
     fig_dynamic = go.Figure(data=[
         go.Surface(z=C_grid, x=R_range, y=D_range, colorscale='Viridis', opacity=0.9, showscale=True,
                    hovertemplate='R: %{x:.2f}<br>D³: %{y:.2f}<br>C: %{z:.2f}<extra></extra>'),
-        go.Scatter3d(x=[R_val], y=[D3_val], z=[compute_creativity(R_val, D3_val)],
+        go.Scatter3d(x=[R_val], y=[D3_val], z=[compute_creativity(R_val,D3_val)],
                      mode='markers+text', marker=dict(size=6, color='red'), text=["Current Value"], textposition="top center")
     ])
     fig_dynamic.update_layout(scene=dict(xaxis_title='Reality (R)', yaxis_title='Dimensionality (D³)', zaxis_title='Creativity (C)'),
                               template='plotly_dark', height=600)
-    st.plotly_chart(fig_dynamic, use_container_width=True)
-    st.markdown(f"<div class='metric-display'>Creativity (C) = {compute_creativity(R_val, D3_val):.4f}</div>", unsafe_allow_html=True)
+    st.plotly_chart(fig_dynamic,use_container_width=True)
+    st.markdown(f"<div class='metric-display'>Creativity (C) = {compute_creativity(R_val,D3_val):.4f}</div>", unsafe_allow_html=True)
 
 # -------- Possibilities Tab --------
 with tabs[2]:
@@ -204,7 +220,7 @@ with tabs[3]:
     st.markdown("<div class='tab-header'>📋 Scenario History / Comparison</div>", unsafe_allow_html=True)
     history_df = pd.DataFrame(st.session_state.history)
     st.dataframe(history_df)
-    
+
     data = {**st.session_state.sliders,"C":C_complex}
     df = pd.DataFrame([data])
     csv_buffer = StringIO()
@@ -219,17 +235,16 @@ with tabs[4]:
     <div class='possibility'>
     <b>The Complex Equation:</b><br>
     C = (R × α^θ × S × Q × (1.3 × A) × E × (1.6 × M)) / (Dₙ × β^θ)<br>
-    
     This equation captures the relationships between:<br>
-    - <i>Consciousness (C)</i>: The level of consciousness.<br>
-    - <i>Sensory processing (R)</i>: The level of sensory processing.<br>
-    - <i>Attention (A)</i>: The level of attention.<br>
-    - <i>Memory (M)</i>: The level of memory.<br>
-    - <i>Emotional state (E)</i>: The emotional state.<br>
-    - <i>Quality of information (Q)</i>: The quality of information.<br>
-    - <i>Neural complexity (Dₙ)</i>: The level of neural complexity.<br>
-    - <i>α and β</i>: Parameters that influence variable relationships.<br>
-    - <i>θ</i>: A parameter affecting non-linearity.<br><br>
+    - *Consciousness (C):* The level of consciousness.<br>
+    - *Sensory processing (R):* The level of sensory processing.<br>
+    - *Attention (A):* The level of attention.<br>
+    - *Memory (M):* The level of memory.<br>
+    - *Emotional state (E):* The emotional state.<br>
+    - *Quality of information (Q):* The quality of information.<br>
+    - *Neural complexity (Dₙ):* The level of neural complexity.<br>
+    - *α and β:* Parameters that influence the relationships between variables.<br>
+    - *θ:* A parameter that influences the non-linearity of the relationships.<br><br>
     
     <b>Beginner Equation:</b><br>
     C = R / D³<br>

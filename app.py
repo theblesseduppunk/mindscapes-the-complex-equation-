@@ -240,29 +240,37 @@ with tabs[3]:
     st.download_button("Download Result as CSV",csv_buffer.getvalue(),"mindscape_result.csv","text/csv")
     st.download_button("Download Result as JSON",json.dumps(data,indent=4),"mindscape_result.json","application/json")
 
-# -------- About Tab --------
+# -------- About Tab (Streamlit-friendly) --------
 with tabs[4]:
     st.markdown("<div class='tab-header'>📖 About MindScape</div>", unsafe_allow_html=True)
-    st.markdown("""
-    <div class='possibility'>
-    <b>The Complex Equation:</b><br>
-    C = (R * α^θ * S * Q * 1.3A * E * 1.6M) / (Dn * β^θ)<br>
-    - R: Sensory processing / Reality<br>
-    - α, θ: Multipliers affecting dynamics<br>
-    - S: Stimulus<br>
-    - Q: Quality<br>
-    - A: Attention<br>
-    - E: Environment<br>
-    - M: Memory<br>
-    - Dn: Dimensional factor<br>
-    - β: Environmental influence<br><br>
+
+    # Complex Equation Section
+    with st.expander("💡 The Complex Equation"):
+        st.markdown("""
+        C = (R * α^θ * S * Q * 1.3A * E * 1.6M) / (Dn * β^θ)
+        
+        - R: Sensory processing / Reality
+        - α, θ: Multipliers affecting dynamics
+        - S: Stimulus
+        - Q: Quality
+        - A: Attention
+        - E: Environment
+        - M: Memory
+        - Dn: Dimensional factor
+        - β: Environmental influence
+        """)
     
-    <b>Beginner Equation:</b><br>
-    C = R / D³<br>
-    - Helps beginners explore creativity as a function of Reality (R) and Dimensionality (D³)<br><br>
-    
-    MindScape was created by <b>Sam Andrews Rodriguez II, 2025</b>.<br>
-    It allows exploration of human and AI interactions, creativity landscapes, immersive experiences, and cognitive simulations.<br>
-    AI Buddy provides guided scenario suggestions for balanced, high-consciousness, or creative states.
-    </div>
-    """, unsafe_allow_html=True)
+    # Beginner Equation Section
+    with st.expander("📘 Beginner Equation"):
+        st.markdown("""
+        C = R / D³  
+        - Explore creativity as a function of Reality (R) and Dimensionality (D³)
+        """)
+
+    # Creator & Purpose Section
+    with st.expander("👤 Creator & Vision"):
+        st.markdown("""
+        Created by **Sam Andrews Rodriguez II, 2025**.  
+        MindScape allows exploration of human and AI interactions, creativity landscapes, immersive experiences, and cognitive simulations.  
+        The AI Buddy provides guided scenario suggestions for balanced, high-consciousness, or creative states.
+        """)

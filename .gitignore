@@ -1,1 +1,23 @@
+# OS & Editor artifacts
+.DS_Store
+Thumbs.db
+*.swp
 
+# Python cache
+__pycache__/
+*.pyc
+*.pyo
+
+# Virtual environments
+.venv/
+env/
+venv/
+
+# Jupyter
+.ipynb_checkpoints
+
+# Secrets
+.streamlit/secrets.toml
+
+# Logs
+*.log

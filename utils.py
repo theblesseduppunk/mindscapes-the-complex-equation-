@@ -2,57 +2,38 @@
 import random
 
 # ------------------------------
-# Compute Consciousness
-# ------------------------------
-def compute_consciousness(R, alpha, theta, S, Q, A, E, M, Dn, beta):
-    """
-    Compute consciousness using the refined complex equation.
-    """
-    try:
-        return (R * (alpha ** theta) * S * Q * (1.3 * A) * E * (1.6 * M)) / (Dn * (beta ** theta))
-    except ZeroDivisionError:
-        return 0
-
-# ------------------------------
-# Compute Creativity (Beginner Equation)
-# ------------------------------
-def compute_creativity(R, D3):
-    """
-    Beginner equation for creativity.
-    """
-    try:
-        return R / (D3 ** 3)
-    except ZeroDivisionError:
-        return 0
-
-# ------------------------------
-# Generate Random Scenario
+# Random Scenario Generator
 # ------------------------------
 def generate_random_scenario(current_values):
     """
-    Generate random scenario values for all variables based on current slider values.
+    Generate a random scenario based on current slider keys.
+    Returns a dictionary with random values between 0.1 and 10.0.
     """
-    return {k: round(random.uniform(0.1, 10.0), 1) for k in current_values.keys()}
+    return {k: round(random.uniform(0.1,10.0),1) for k in current_values.keys()}
 
 # ------------------------------
-# AI Buddy Suggestions
+# Complex Equation Function
 # ------------------------------
-def ai_suggestions(current_values):
+def compute_consciousness(R, alpha, theta, S, Q, A, E, M, Dn, beta):
     """
-    Returns preset AI-guided suggestions for sliders.
+    Computes the Complex Equation for Consciousness (C).
     """
-    suggestions = []
+    try:
+        C = (R * (alpha**theta) * S * Q * (1.3*A) * E * (1.6*M)) / (Dn * (beta**theta))
+        return C
+    except Exception as e:
+        print("Error computing consciousness:", e)
+        return 0
 
-    # Balanced
-    balanced = {k: 5.0 for k in current_values.keys()}
-    suggestions.append(("Balanced", balanced))
-
-    # High Consciousness
-    high_c = {k: round(random.uniform(7.5, 10.0), 1) for k in current_values.keys()}
-    suggestions.append(("High Consciousness", high_c))
-
-    # Creative Insight
-    creative = {k: round(random.uniform(0.5, 10.0), 1) for k in current_values.keys()}
-    suggestions.append(("Creative AI Insight", creative))
-
-    return suggestions
+# ------------------------------
+# Beginner Creativity Equation
+# ------------------------------
+def compute_creativity(R, D3):
+    """
+    Computes the Beginner Creativity equation: C = R / D^3
+    """
+    try:
+        return R / (D3**3)
+    except Exception as e:
+        print("Error computing creativity:", e)
+        return 0

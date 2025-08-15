@@ -24,14 +24,9 @@ body {
     font-family:'Orbitron', monospace;
     color: #00ffff;
     background: linear-gradient(135deg, #0a0a0a, #111122);
-    transition: background 1s ease;
 }
 
-@keyframes fadeIn {from {opacity:0; transform:translateY(-10px);} to {opacity:1; transform:translateY(0);} }
-@keyframes pulse {0% {text-shadow:0 0 5px cyan,0 0 10px magenta;} 50% {text-shadow:0 0 15px cyan,0 0 25px magenta;} 100% {text-shadow:0 0 5px cyan,0 0 10px magenta;}}
-
 .welcome-box {
-    animation: fadeIn 1.5s ease-out forwards;
     padding: 30px; border-radius: 15px;
     background: rgba(0,0,0,0.7); backdrop-filter: blur(10px);
     box-shadow: 0 0 30px rgba(0,255,255,0.5);
@@ -42,9 +37,8 @@ body {
     padding:15px 30px; border-radius:25px; color:black; font-size:1.3em; font-weight:bold; cursor:pointer; transition:all 0.3s ease;
 }
 .launch-btn:hover { transform: scale(1.05); box-shadow: 0 0 25px cyan, 0 0 25px magenta; }
-
 .slider-label {color:#00ffff; font-weight:bold;}
-.metric-display {animation: pulse 2s infinite; font-size:1.8em; color:#00ffff; text-shadow:0 0 10px #00ffff, 0 0 20px #ff00ff;}
+.metric-display {font-size:1.8em; color:#00ffff; text-shadow:0 0 10px #00ffff,0 0 20px #ff00ff;}
 .tab-header {font-size:2em; color:#00ffff; font-weight:bold; margin-top:10px; text-shadow:0 0 10px #00ffff,0 0 20px #ff00ff;}
 .possibility {margin:10px 0; padding:10px; border-radius:10px; background: rgba(0,0,0,0.5); border:1px solid #00ffff; box-shadow:0 0 15px #ff00ff;}
 </style>
@@ -57,7 +51,7 @@ st.markdown("""
 <div class="welcome-box">
     <div style="font-size:2.8em; font-weight:bold;">🚀 MindScape</div>
     <div style="margin-top:10px; font-size:1.3em;">
-        A simulation creator, the first of its kind, by <b>Sam Andrews Rodriguez II</b>.<br>
+        A simulation creator, by <b>Sam Andrews Rodriguez II</b>.<br>
         Explore consciousness, creativity, dimensionality, and AI-driven scenarios.
     </div>
     <hr style="border:0.5px solid #00ffff; margin:15px 0;">
@@ -83,15 +77,18 @@ demo_values = {"R":7.0,"alpha":1.2,"theta":1.0,"S":8.0,"Q":7.0,"A":9.0,"E":6.0,"
 # Functions
 # ------------------------------
 def generate_random_scenario():
-    return {k: round(random.uniform(0.1,10.0),1) for k in default_values.keys()}
+    return {k: round(random.uniform(0.1,10.0),1) for k in st.session_state.sliders.keys()}
 
 def animate_sliders(target_values, steps=15, delay=0.03):
+    """Smoothly animate sliders to target values without rerun."""
     for i in range(1, steps+1):
         for key in st.session_state.sliders:
             current = st.session_state.sliders[key]
             st.session_state.sliders[key] = current + (target_values[key]-current)*(i/steps)
+        # Redraw sidebar sliders
+        for var in default_values.keys():
+            st.sidebar.slider(f"{var}", 0.1, 10.0, st.session_state.sliders[var], 0.1)
         time.sleep(delay)
-        st.experimental_rerun()
 
 def compute_consciousness(R, alpha, theta, S, Q, A, E, M, Dn, beta):
     return (R*(alpha**theta)*S*Q*(1.3*A)*E*(1.6*M)) / (Dn*(beta**theta))
@@ -114,6 +111,7 @@ def ai_suggestions(current_values):
 # ------------------------------
 if st.sidebar.button("📈 Load Demo Scenario"):
     animate_sliders(demo_values)
+
 if st.sidebar.button("🎲 Generate Random Scenario"):
     animate_sliders(generate_random_scenario())
 
@@ -124,7 +122,7 @@ slider_values = {}
 for var in default_values.keys():
     slider_values[var] = st.sidebar.slider(f"{var}",0.1,10.0,st.session_state.sliders[var],0.1)
 
-# AIBuddy Tab Section
+# AI Buddy Suggestions
 ai_tab = st.sidebar.expander("🤖 AIBuddy Suggestions")
 ai_choices = ai_suggestions(slider_values)
 for name, vals in ai_choices:
@@ -135,14 +133,6 @@ for name, vals in ai_choices:
 C_complex = compute_consciousness(**slider_values)
 st.session_state.sliders.update(slider_values)
 st.session_state.history.append({**slider_values,"C":C_complex})
-
-# ------------------------------
-# Dynamic Background based on C_complex
-# ------------------------------
-if C_complex < 50:
-    st.markdown("<style>body {background: linear-gradient(to bottom, #0a0a0a, #001133);}</style>", unsafe_allow_html=True)
-else:
-    st.markdown("<style>body {background: linear-gradient(to bottom, #220011, #330033);}</style>", unsafe_allow_html=True)
 
 # ------------------------------
 # Main Tabs
@@ -166,27 +156,25 @@ with tabs[0]:
     fig.update_layout(title=f"{target_variable} vs Stimulus (S)", xaxis_title="Stimulus (S)", yaxis_title=f"{target_variable}", template="plotly_dark")
     st.plotly_chart(fig,use_container_width=True)
 
-    # 3D Surface with selectable X/Y
+    # 3D Surface Options
     st.subheader("🌐 3D Variable Interaction Map")
-    var_x, var_y = st.columns(2)
-    with var_x: x_var = st.selectbox("X-axis variable:", list(slider_values.keys()), index=list(slider_values.keys()).index("S"))
-    with var_y: y_var = st.selectbox("Y-axis variable:", list(slider_values.keys()), index=list(slider_values.keys()).index("A"))
+    x_var, y_var = st.columns(2)
+    with x_var: x_sel = st.selectbox("X-axis variable:", list(slider_values.keys()), index=list(slider_values.keys()).index("S"))
+    with y_var: y_sel = st.selectbox("Y-axis variable:", list(slider_values.keys()), index=list(slider_values.keys()).index("A"))
 
     X = np.linspace(0.1,10,30)
     Y = np.linspace(0.1,10,30)
-    Z = np.zeros((len(X),len(Y)))
-    for i,xv in enumerate(X):
-        for j,yv in enumerate(Y):
+    Z = np.zeros((len(X), len(Y)))
+    for i, xv in enumerate(X):
+        for j, yv in enumerate(Y):
             vals = slider_values.copy()
-            vals[x_var] = xv
-            vals[y_var] = yv
-            try:
-                Z[i,j] = compute_consciousness(**vals)
-            except Exception as e:
-                Z[i,j] = np.nan
+            vals[x_sel] = xv
+            vals[y_sel] = yv
+            Z[i,j] = compute_consciousness(**vals)
 
-    fig3d = go.Figure(data=[go.Surface(z=Z,x=X,y=Y,colorscale='Viridis')])
-    fig3d.update_layout(scene=dict(xaxis_title=x_var, yaxis_title=y_var, zaxis_title="C"),template="plotly_dark",height=600)
+    fig3d = go.Figure(data=[go.Surface(z=Z, x=X, y=Y, colorscale='Viridis')])
+    fig3d.update_layout(scene=dict(xaxis_title=x_sel, yaxis_title=y_sel, zaxis_title="C"),
+                        template="plotly_dark", height=600)
     st.plotly_chart(fig3d,use_container_width=True)
 
 # -------- Beginner Equation Tab --------
@@ -218,14 +206,13 @@ with tabs[2]:
     st.markdown("<div class='tab-header'>✨ Possibilities</div>", unsafe_allow_html=True)
     st.markdown("""
     <div class='possibility'>
-    MindScape can simulate consciousness dynamics, creativity landscapes, and interactions between human, AI, and virtual dimensions.
-    It allows exploration of:
+    MindScape simulates consciousness, creativity, and human-AI interactions. Explore:
     <ul>
         <li>Real-world + AI scenarios</li>
         <li>Virtual + real-world interplay</li>
         <li>Dimensionality-inspired creative experiments</li>
-        <li>Neuro-interactive art, problem-solving, and immersive experiences</li>
-        <li>AI-driven insights into human cognition and creativity</li>
+        <li>Neuro-interactive art, problem-solving, immersive experiences</li>
+        <li>AI-driven insights into cognition and creativity</li>
     </ul>
     </div>
     """, unsafe_allow_html=True)
@@ -249,26 +236,19 @@ with tabs[4]:
     st.markdown("""
     <div class='possibility'>
     <b>The Complex Equation:</b><br>
-    This equation captures the relationships between:<br>
-    - <i>Consciousness (C):</i> The level of consciousness.<br>
-    - <i>Sensory processing (R):</i> The level of sensory processing.<br>
-    - <i>Attention (A):</i> The level of attention.<br>
-    - <i>Memory (M):</i> The level of memory.<br>
-    - <i>Emotional state (E):</i> The emotional state.<br>
-    - <i>Quality of information (Q):</i> The quality of information.<br>
-    - <i>Neural complexity (Dₙ):</i> The level of neural complexity.<br>
-    - <i>α and β:</i> Parameters that influence the relationships between variables.<br>
-    - <i>θ:</i> A parameter that influences the non-linearity of the relationships.<br><br>
-    
-    <b>Equation:</b><br>
-    C = (R × α^θ × S × Q × (1.3 × A) × E × (1.6 × M)) / (Dₙ × β^θ)<br><br>
-    
-    <b>Beginner Equation:</b><br>
-    C = R / D³<br>
-    - Helps beginners explore creativity as a function of Reality (R) and Dimensionality (D³)<br><br>
-    
-    MindScape was created by <b>Sam Andrews Rodriguez II, 2025</b>.<br>
-    It allows exploration of human and AI interactions, creativity landscapes, immersive experiences, and cognitive simulations.<br>
-    AI Buddy provides guided scenario suggestions for balanced, high-consciousness, or creative states.
+    C = (R × α^θ × S × Q × (1.3 × A) × E × (1.6 × M)) / (Dₙ × β^θ)<br>
+    This equation captures the relationships between:
+    <ul>
+        <li><b>Consciousness (C)</b>: The level of consciousness</li>
+        <li><b>Sensory processing (R)</b>: The level of sensory processing</li>
+        <li><b>Attention (A)</b>: The level of attention</li>
+        <li><b>Memory (M)</b>: The level of memory</li>
+        <li><b>Emotional state (E)</b>: The emotional state</li>
+        <li><b>Quality of information (Q)</b>: The quality of information</li>
+        <li><b>Neural complexity (Dₙ)</b>: The level of neural complexity</li>
+        <li><b>α and β</b>: Parameters influencing relationships</li>
+        <li><b>θ</b>: Parameter influencing non-linearity</li>
+    </ul>
+    MindScape allows exploration of human and AI interactions, creativity landscapes, immersive experiences, and cognitive simulations.
     </div>
     """, unsafe_allow_html=True)

@@ -83,7 +83,7 @@ demo_values = {"R":7.0,"alpha":1.2,"theta":1.0,"S":8.0,"Q":7.0,"A":9.0,"E":6.0,"
 # Functions
 # ------------------------------
 def generate_random_scenario():
-    return {k: round(random.uniform(0.1,10.0),1) for k in st.session_state.sliders.keys()}
+    return {k: round(random.uniform(0.1,10.0),1) for k in default_values.keys()}
 
 def animate_sliders(target_values, steps=15, delay=0.03):
     for i in range(1, steps+1):
@@ -166,7 +166,7 @@ with tabs[0]:
     fig.update_layout(title=f"{target_variable} vs Stimulus (S)", xaxis_title="Stimulus (S)", yaxis_title=f"{target_variable}", template="plotly_dark")
     st.plotly_chart(fig,use_container_width=True)
 
-    # 3D Surface
+    # 3D Surface with selectable X/Y
     st.subheader("🌐 3D Variable Interaction Map")
     var_x, var_y = st.columns(2)
     with var_x: x_var = st.selectbox("X-axis variable:", list(slider_values.keys()), index=list(slider_values.keys()).index("S"))
@@ -180,7 +180,10 @@ with tabs[0]:
             vals = slider_values.copy()
             vals[x_var] = xv
             vals[y_var] = yv
-            Z[i,j] = compute_consciousness(**vals)
+            try:
+                Z[i,j] = compute_consciousness(**vals)
+            except Exception as e:
+                Z[i,j] = np.nan
 
     fig3d = go.Figure(data=[go.Surface(z=Z,x=X,y=Y,colorscale='Viridis')])
     fig3d.update_layout(scene=dict(xaxis_title=x_var, yaxis_title=y_var, zaxis_title="C"),template="plotly_dark",height=600)
@@ -240,37 +243,32 @@ with tabs[3]:
     st.download_button("Download Result as CSV",csv_buffer.getvalue(),"mindscape_result.csv","text/csv")
     st.download_button("Download Result as JSON",json.dumps(data,indent=4),"mindscape_result.json","application/json")
 
-# -------- About Tab (Streamlit-friendly) --------
+# -------- About Tab --------
 with tabs[4]:
     st.markdown("<div class='tab-header'>📖 About MindScape</div>", unsafe_allow_html=True)
-
-    # Complex Equation Section
-    with st.expander("💡 The Complex Equation"):
-        st.markdown("""
-        C = (R * α^θ * S * Q * 1.3A * E * 1.6M) / (Dn * β^θ)
-        
-        - R: Sensory processing / Reality
-        - α, θ: Multipliers affecting dynamics
-        - S: Stimulus
-        - Q: Quality
-        - A: Attention
-        - E: Environment
-        - M: Memory
-        - Dn: Dimensional factor
-        - β: Environmental influence
-        """)
+    st.markdown("""
+    <div class='possibility'>
+    <b>The Complex Equation:</b><br>
+    This equation captures the relationships between:<br>
+    - <i>Consciousness (C):</i> The level of consciousness.<br>
+    - <i>Sensory processing (R):</i> The level of sensory processing.<br>
+    - <i>Attention (A):</i> The level of attention.<br>
+    - <i>Memory (M):</i> The level of memory.<br>
+    - <i>Emotional state (E):</i> The emotional state.<br>
+    - <i>Quality of information (Q):</i> The quality of information.<br>
+    - <i>Neural complexity (Dₙ):</i> The level of neural complexity.<br>
+    - <i>α and β:</i> Parameters that influence the relationships between variables.<br>
+    - <i>θ:</i> A parameter that influences the non-linearity of the relationships.<br><br>
     
-    # Beginner Equation Section
-    with st.expander("📘 Beginner Equation"):
-        st.markdown("""
-        C = R / D³  
-        - Explore creativity as a function of Reality (R) and Dimensionality (D³)
-        """)
-
-    # Creator & Purpose Section
-    with st.expander("👤 Creator & Vision"):
-        st.markdown("""
-        Created by **Sam Andrews Rodriguez II, 2025**.  
-        MindScape allows exploration of human and AI interactions, creativity landscapes, immersive experiences, and cognitive simulations.  
-        The AI Buddy provides guided scenario suggestions for balanced, high-consciousness, or creative states.
-        """)
+    <b>Equation:</b><br>
+    C = (R × α^θ × S × Q × (1.3 × A) × E × (1.6 × M)) / (Dₙ × β^θ)<br><br>
+    
+    <b>Beginner Equation:</b><br>
+    C = R / D³<br>
+    - Helps beginners explore creativity as a function of Reality (R) and Dimensionality (D³)<br><br>
+    
+    MindScape was created by <b>Sam Andrews Rodriguez II, 2025</b>.<br>
+    It allows exploration of human and AI interactions, creativity landscapes, immersive experiences, and cognitive simulations.<br>
+    AI Buddy provides guided scenario suggestions for balanced, high-consciousness, or creative states.
+    </div>
+    """, unsafe_allow_html=True)
